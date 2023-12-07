@@ -11,7 +11,7 @@ db_host = 'localhost'
 db_port = '5432' #6432
 db_name = 'postgres'
 db_user = 'postgres'
-db_password = 'perkele123'
+db_password = ''
 
 # Establish serial connection to STM32
 try:
