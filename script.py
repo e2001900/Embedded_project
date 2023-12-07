@@ -1,25 +1,26 @@
-import minimalmodbus
+import serial
 import psycopg2
 from psycopg2 import sql
-import time
 
-# Modbus RTU settings
-modbus_port = '/dev/ttyUSB0'  # Replace with the appropriate serial port on your system
-modbus_slave_address = 1  # Replace with the Modbus slave address of your STM32
+# Serial connection settings
+serial_port = 'COM3'  # Replace with the appropriate serial port on your system
+baud_rate = 115200
 
 # PostgreSQL connection settings
-db_host = 'your_postgres_host'
-db_port = 'your_postgres_port'
-db_name = 'your_database_name'
-db_user = 'your_database_user'
-db_password = 'your_database_password'
+db_host = 'localhost'
+db_port = '5432' #6432
+db_name = 'postgres'
+db_user = 'postgres'
+db_password = 'perkele123'
 
-# Modbus instrument configuration
-modbus_instrument = minimalmodbus.Instrument(modbus_port, modbus_slave_address)
-modbus_instrument.serial.baudrate = 9600
-modbus_instrument.serial.timeout = 1
+# Establish serial connection to STM32
+try:
+    ser = serial.Serial(serial_port, baud_rate, timeout=1)
+except serial.SerialException as e:
+    print(f"Error opening serial port: {e}")
+    exit(1)
 
-# PostgreSQL connection
+# Establish PostgreSQL connection
 try:
     conn = psycopg2.connect(
         host=db_host,
@@ -31,36 +32,39 @@ try:
     cursor = conn.cursor()
 except psycopg2.Error as e:
     print(f"Error connecting to PostgreSQL: {e}")
+    ser.close()
     exit(1)
 
 try:
     while True:
-        # Read data from STM32 using Modbus RTU
+        # Read data from STM32
         try:
-            temperature = modbus_instrument.read_register(0, functioncode=4)  # Replace with the appropriate Modbus address
-            humidity = modbus_instrument.read_register(1, functioncode=4)     # Replace with the appropriate Modbus address
-        except (IOError, ValueError) as e:
-            print(f"Error reading data from STM32 using Modbus RTU: {e}")
-            time.sleep(1)
+            stm32_data = ser.readline().decode('utf-8').strip()
+        except UnicodeDecodeError:
+            print("Error decoding data from STM32. Skipping.")
             continue
 
-        # Insert data into PostgreSQL
-        try:
-            insert_query = sql.SQL("INSERT INTO sensor_data (temperature, humidity) VALUES ({}, {});").format(
-                sql.Literal(temperature),
-                sql.Literal(humidity)
-            )
-            cursor.execute(insert_query)
-            conn.commit()
-        except psycopg2.Error as e:
-            print(f"Error inserting data into PostgreSQL: {e}")
+        # Process and insert data into PostgreSQL
+        if stm32_data:
+            try:
+                # Assuming STM32 data format is 'temperature,humidity'
+                temperature, humidity = map(float, stm32_data.split(','))
 
-        # Wait for a specific interval (e.g., 5 seconds) before fetching and inserting the next data point
-        time.sleep(5)
+                # Insert data into PostgreSQL
+                insert_query = sql.SQL("INSERT INTO sensor_data (temperature, humidity) VALUES ({}, {});").format(
+                    sql.Literal(temperature),
+                    sql.Literal(humidity)
+                )
+                cursor.execute(insert_query)
+                conn.commit()
+
+            except (ValueError, psycopg2.Error) as e:
+                print(f"Error processing or inserting data into PostgreSQL: {e}")
 
 except KeyboardInterrupt:
     print("Program terminated by user.")
 finally:
     # Close connections
+    ser.close()
     cursor.close()
     conn.close()
