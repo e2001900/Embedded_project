@@ -1,12 +1,45 @@
 # BATTERY MANAGEMENT SYSTEM
+## Functionality
 
-BMS is an electronic system that manages a rechargeable Lithium battery, and protecting the battery from operating outside its safe operating area.
-The BMS may monitor the state of the battery as represented by various items, such as:
-  Voltage: total voltage, voltages of individual cells.
-  Temperature: average temperature of cells.
-  Current: current in or out of the battery.
-  Health of individual cells.
-  State of balance of cells.
+The BMS monitors and manages various aspects of the battery's state to guarantee safe and optimal performance, including:
+
+- **Voltage Monitoring:**
+  - Total voltage of the battery.
+  - Individual cell voltages within the battery pack.
+
+- **Temperature Control:**
+  - Average temperature of the battery cells.
+
+- **Current Supervision:**
+  - Monitoring the flow of current in or out of the battery.
+
+- **Cell Health Assessment:**
+  - Evaluation of the health status of individual battery cells.
+
+- **Cell Balancing:**
+  - Ensuring the state of balance among the battery cells.
+
+## Details
+
+### Voltage Monitoring
+
+The BMS keeps track of the total voltage of the battery and the voltages of each individual cell, ensuring they stay within safe limits.
+
+### Temperature Control
+
+Monitoring and maintaining the average temperature of the battery cells to prevent overheating or operating outside safe temperature ranges.
+
+### Current Supervision
+
+Tracking the flow of current in or out of the battery to manage charging and discharging processes effectively.
+
+### Cell Health Assessment
+
+Assessing the health status of individual battery cells to identify any degradation or issues affecting overall battery performance.
+
+### Cell Balancing
+
+Ensuring an optimal state of balance among the battery cells, preventing overcharging or deep discharging.
 
 ## Installation
 
@@ -26,10 +59,10 @@ The project requirements:
   - Multiplexer: 4051BE
   - OpAmp: LM324N
 2. **MOSFET:**
-   - Mosfet FDS6898AZ
+  - Mosfet FDS6898AZ
 3. **Current shunt:**
-   - WLBR010FE
+  - WLBR010FE
 4. **Temperature sensor:**
-   - Temperature sensor LM35DZ 
+  - Temperature sensor LM35DZ 
 
 
