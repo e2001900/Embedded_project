@@ -72,8 +72,10 @@ float Holding_Registers_Database[5]={
 };
 
 float adc_temp = 0;
-float raw_adc[5] = {0,0,0,0,0,};
+float last_cell = 0;
+float raw_adc[5] = {0,0,0,0,0};
 float Voltages[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+float current = 0;
 float temperature = 0;
 float temp = 0;
 char buffer[100];
@@ -109,7 +111,45 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 	HAL_UARTEx_ReceiveToIdle_IT(&huart2, RxData, 256);
 }
 /* USER CODE END 0 */
+int _write(int file, char *ptr, int len)
+{
+	HAL_UART_Transmit(&huart2, (uint8_t*)ptr, len, HAL_MAX_DELAY);
+	return len;
+}
 
+void current_check(float current) {
+	if (current > 1000){
+		HAL_GPIO_WritePin(GPIOA, Charge_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, Discharge_Pin, GPIO_PIN_RESET);
+	}
+	else {
+		HAL_GPIO_WritePin(GPIOA, Charge_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, Discharge_Pin, GPIO_PIN_SET);
+	}
+}
+
+void temperature_check(float temp) {
+	if ((temp < -20) || (temp > 40)) {
+		HAL_GPIO_WritePin(GPIOA, Charge_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOA, Discharge_Pin, GPIO_PIN_RESET);
+	}
+	else {
+		HAL_GPIO_WritePin(GPIOA, Charge_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOA, Discharge_Pin, GPIO_PIN_SET);
+	}
+}
+
+void voltage_check(float voltage[]) {
+	for(int i = 0; i < 5; i++) {
+		if ((voltage[i] > 3) || voltage[i] < 3) {
+			HAL_GPIO_WritePin(GPIOA, Charge_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOA, Discharge_Pin, GPIO_PIN_RESET);
+		}
+		else {
+			HAL_GPIO_WritePin(GPIOA, Charge_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, Discharge_Pin, GPIO_PIN_SET);
+		}
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -153,37 +193,47 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  for(int i = 0; i < 6; i++)
+	  	  		  	  {
+	  	  		  		  selectMuxPin(i);
+	  	  		  		  HAL_ADC_Start(&hadc);
+	  	  		  		  HAL_ADC_PollForConversion(&hadc, 100);
+	  	  		  		  raw_adc[i] = HAL_ADC_GetValue(&hadc);
+
+	  	  		  		  /*********************************************/
+	  	  		  		  //raw_adc[0] = channel0
+	  	  		  		  //raw_adc[1] = channel1
+	  	  		  		  //raw_adc[2] = channel2
+	  	  		  		  //raw_adc[3] = channel3, not connected atm
+	  	  		  		  //raw_adc[4] = channel4 = temp sensor
+	  	  		  		  //raw_adc[5] = channel5 = current sensor
+	  	  		  		  /* ***************************************************************************************************/
+
+	  	  		  		  temp = (raw_adc[4]*3.3)/4095;
+	  	  		  		  temperature = temp*100;
+	  	  		  		  current = ((raw_adc[5] / 9300) / 0.01) * 1000;
+
+
+	  	  		  		  // should add this modified temperature value to the "database" aswell
+
+	  	  		  		  Voltages[i] = (raw_adc[i] / 4095) * 3.3;
+	  	  		  		  last_cell = Voltages[2] - Voltages[3];
+	  	  		  		  Holding_Registers_Database[i] = Voltages[i];
+	  	  		  		  //Holding_Registers_Database[4] = temperature;
+
+	  	  		  		//snprintf(buffer,sizeof(buffer), "Voltage at channel(1): %.2f\r\n",temperature);
+	  	  		  		//HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	  	  		  		//HAL_Delay(1000);
+
+	  	  		  		  void current_check(current);
+	  	  		  		  void temperature_check(temperature);
+	  	  		  		  void voltage_check( Voltages[i]);
+
+	  	  		  		  HAL_ADC_Stop(&hadc);
+	  	  		  		  HAL_Delay(500);
+	  	  		  	  }
     /* USER CODE END WHILE */
 
-	  for(int i = 0; i < 5; i++)
-	  		  	  {
-	  		  		  selectMuxPin(i);
-	  		  		  HAL_ADC_Start(&hadc);
-	  		  		  HAL_ADC_PollForConversion(&hadc, 10);
-	  		  		  raw_adc[i] = HAL_ADC_GetValue(&hadc);
-
-	  		  		  //value[0] = channel0
-	  		  		  //value[1] = channel1
-	  		  		  //value[2] = channel2
-	  		  		  //value[3] = channel3, not connected atm
-	  		  		  //value[4] = channel4 = temp sensor
-
-	  		  		  //value[5] = channel5, potentiometer, not connected atm
-	  		  		  temp = (raw_adc[4]*3.3)/4095;
-	  		  		  temperature = temp*100;
-	  		  		  Voltages[i] = (raw_adc[i] / 4095) * 3.3;
-
-
-	  		  		  Holding_Registers_Database[i] = Voltages[i];
-
-
-
-	  		  		//snprintf(buffer,sizeof(buffer), "Voltage at channel(1): %.2f\r\n",temperature);
-	  		  		//HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
-	  		  		//HAL_Delay(1000);
-
-	  		  		  HAL_ADC_Stop(&hadc);
-	  		  	  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -276,7 +326,7 @@ static void MX_ADC_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_24CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_4CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -338,13 +388,19 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, S1_Pin|S2_Pin|S3_Pin|TX_EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|Charge_Pin|Discharge_Pin, S1_Pin|S2_Pin|S3_Pin|TX_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : S1_Pin S2_Pin S3_Pin TX_EN_Pin */
   GPIO_InitStruct.Pin = S1_Pin|S2_Pin|S3_Pin|TX_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = LD2_Pin|Charge_Pin|Discharge_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
