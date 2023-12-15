@@ -22,66 +22,14 @@ The project requirements:
 
 ### Steps
 
-1. **Clone the repository:**
+1. **Battery cells voltage measurement:**
+  - Multiplexer: 4051BE
+  - OpAmp: LM324N
+2. **MOSFET:**
+   - Mosfet FDS6898AZ
+3. **Current shunt:**
+   - WLBR010FE
+4. **Temperature sensor:**
+   - Temperature sensor LM35DZ 
 
-    ```bash
-    [git clone https://github.com/username/AwesomeToDo.git](https://github.com/e2001900/Embedded_project)
-    ```
 
-2. **Navigate to the project directory:**
-
-    ```bash
-    cd AwesomeToDo
-    ```
-
-3. **Install dependencies:**
-
-    ```bash
-    npm install
-    ```
-
-### Configuration
-
-- **Environment Variables:**
-
-  - Rename the `.env.example` file to `.env`.
-  - Update the variables in the `.env` file as needed (e.g., database credentials, API keys).
-
-### Database Setup
-
-1. **Create a local database instance (if required):**
-
-    ```bash
-    # Example for PostgreSQL
-    createdb my_todo_database
-    ```
-
-2. **Run database migrations (if applicable):**
-
-    ```bash
-    npm run migrate
-    ```
-
-### Running the Application
-
-1. **Start the server:**
-
-    ```bash
-    npm start
-    ```
-
-2. **Access the application:**
-
-    Open your browser and go to `http://localhost:3000` to use the app.
-
-### Testing
-
-- Run tests to ensure everything is working:
-
-    ```bash
-    npm test
-    ```
-
-### Troubleshooting
-
-- If encountering issues, refer to the project's documentation or raise an issue on GitHub.
