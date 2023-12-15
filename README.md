@@ -53,7 +53,7 @@ The project requirements:
   Communication of cell voltages/temperatures/... over Modbus RTU
   Some kind of visualization of the Modbus data
 
-### Steps
+### Components name
 
 1. **Battery cells voltage measurement:**
   - Multiplexer: 4051BE
