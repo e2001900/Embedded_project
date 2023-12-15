@@ -25,7 +25,7 @@ The project requirements:
 1. **Clone the repository:**
 
     ```bash
-    git clone https://github.com/username/AwesomeToDo.git
+    [git clone https://github.com/username/AwesomeToDo.git](https://github.com/e2001900/Embedded_project)
     ```
 
 2. **Navigate to the project directory:**
